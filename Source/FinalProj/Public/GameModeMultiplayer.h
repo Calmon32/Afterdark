@@ -33,5 +33,9 @@ private:
 	virtual bool ReadyToStartMatch_Implementation() override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+	TArray<AActor*> SpawnPoints;
 	
 };

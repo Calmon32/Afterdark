@@ -2,6 +2,7 @@
 
 #include "GameModeMultiplayer.h"
 #include "PlayerControllerMultiplayer.h"
+#include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -18,6 +19,9 @@ void AGameModeMultiplayer::BeginPlay() {
 	expectedPlayerCount = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "PlayerCount")));
 	UE_LOG(LogTemp, Warning, TEXT("PLAYERS: %d"), expectedPlayerCount);
 	loaded = true;
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnPoints);
+
 }
 
 bool AGameModeMultiplayer::ReadyToStartMatch_Implementation() {
@@ -38,4 +42,12 @@ void AGameModeMultiplayer::PostLogin(APlayerController * NewPlayer)
 	PlayerControllerList.Add(Cast<APlayerControllerMultiplayer>(NewPlayer));
 	playercount++;
 	GLog->Log("Player Joined");
+}
+
+AActor * AGameModeMultiplayer::ChoosePlayerStart_Implementation(AController * Player)
+{
+	int index = FMath::RoundToInt(FMath::RandRange(0, SpawnPoints.Num()-1));
+	AActor* spawn = SpawnPoints[index];
+	SpawnPoints.RemoveAt(index);
+	return spawn;
 }
