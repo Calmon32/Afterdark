@@ -65,5 +65,13 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	//Movement
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	void ToggleCrouch();
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	//bool CrouchButtonDown;
+
 };
 
