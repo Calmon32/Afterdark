@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "PickUp.h"
 #include "TP_ThirdPersonCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -18,8 +19,15 @@ class ATP_ThirdPersonCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Battery, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* CollectionSphere;
+
+
 public:
 	ATP_ThirdPersonCharacter();
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
@@ -59,6 +67,19 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
+	UFUNCTION(BlueprintCallable, Category = "Pickups")
+	void CollectPickups();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerCollectPickups();
+	void ServerCollectPickups_Implementation();
+	bool ServerCollectPickups_Validate();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Pickup")
+	void CollectedPickup(APickUp* pickup);
+	void CollectedPickup_Implementation(APickUp* pickup);
+
+	void DoThisShit_Implementation(APickUp* pickup);
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -72,6 +93,10 @@ public:
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	//bool CrouchButtonDown;
+private:
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Battery", Meta = (AllowPrivateAccess = "true"))
+	float CollectionSphereRadius;
 
 };
 

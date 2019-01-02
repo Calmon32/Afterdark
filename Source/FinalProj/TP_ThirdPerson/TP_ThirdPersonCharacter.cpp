@@ -8,6 +8,15 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
+#include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Pickup.h"
+#include "Vector.h"
+#include "KeyPickup.h"
+//#include "Runtime/Engine/Classes/Engine/World.h"
+
+
 //////////////////////////////////////////////////////////////////////////
 // ATP_ThirdPersonCharacter
 
@@ -44,10 +53,24 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	CollectionSphereRadius = 200.f;
+
+	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
+	CollectionSphere->SetupAttachment(RootComponent);
+	CollectionSphere->SetSphereRadius(CollectionSphereRadius);
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
+
+
+void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ATP_ThirdPersonCharacter, CollectionSphereRadius);
+}
 
 void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
@@ -132,3 +155,51 @@ void ATP_ThirdPersonCharacter::ToggleCrouch()
 		//CrouchButtonDown = true;
 }
 
+void ATP_ThirdPersonCharacter::CollectPickups() {
+	ServerCollectPickups();
+}
+
+bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
+	return true;
+}
+
+void ATP_ThirdPersonCharacter::DoThisShit_Implementation(APickUp * pickup)
+{
+	CollectedPickup(pickup);
+}
+
+void ATP_ThirdPersonCharacter::ServerCollectPickups_Implementation()
+{
+	if (Role == ROLE_Authority)
+	{
+		TArray<AActor*> CollectedActors;
+		CollectionSphere->GetOverlappingActors(CollectedActors);
+
+		for (int i = 0; i < CollectedActors.Num(); i++)
+		{
+			APickUp* const TestPickup = Cast<APickUp>(CollectedActors[i]);
+			if (TestPickup != NULL && !TestPickup->IsPendingKill() && TestPickup->IsActive())
+			{
+				if (AKeyPickup* const TestBattery = Cast<AKeyPickup>(TestPickup))
+				{
+					/*UE_LOG(LogTemp, Warning, TEXT("number of quests: %d"), QuestArray.Num());
+					for (int j = 0; j < QuestArray.Num(); j++)
+					{
+						AQuestBase* quest = QuestArray[j];
+						UE_LOG(LogTemp, Warning, TEXT("description of quests: %d"), quest->TargetID);
+						if (quest->TargetID == TestBattery->PickupID)
+						{
+							quest->AddProgress();
+							GLog->Log("add to progress asdhjasgdkjahsdfasd");
+						}
+					}
+					LevelingSystem->AddExperience(100.0f);
+					*/
+				}
+				CollectedPickup(TestPickup);
+				TestPickup->PickedUpBy(this);
+				TestPickup->SetActive(false);
+			}
+		}
+	}
+}
