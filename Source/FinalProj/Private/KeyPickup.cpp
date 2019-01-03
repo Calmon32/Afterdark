@@ -6,7 +6,7 @@
 
 AKeyPickup::AKeyPickup() {
 	bReplicateMovement = true;
-	GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+	GetStaticMeshComponent()->SetMobility(EComponentMobility::Stationary);
 	GetStaticMeshComponent()->SetSimulatePhysics(true);
 
 }
