@@ -68,6 +68,8 @@ FString AGameModeMultiplayer::InitNewPlayer(APlayerController * NewPlayerControl
 	Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
 	UE_LOG(LogTemp, Warning, TEXT("PlayerOptions: %s"), *Options);
 
+	FString playername = UGameplayStatics::ParseOption(Options, TEXT("Name"));
+	ChangeName(NewPlayerController, playername, true);
 
 	/*
 	bool IsEnemy = FCString::Stricmp(*UGameplayStatics::ParseOption(Options, TEXT("IsEnemy")), TEXT("1")) == 0;

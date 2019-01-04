@@ -15,7 +15,6 @@
 #include "Vector.h"
 #include "KeyPickup.h"
 #include "Door.h"
-#include "Public/GameStateMultiplayer.h"
 //#include "Runtime/Engine/Classes/Engine/World.h"
 
 
@@ -212,8 +211,6 @@ void ATP_ThirdPersonCharacter::ServerCollectPickups_Implementation()
 				{
 
 					//ADoor* door->AddProgress();
-					AGameStateMultiplayer* const gamestate = GetWorld() != NULL ? GetWorld()->GetGameState<AGameStateMultiplayer>() : NULL;
-					GLog->Log("add to keys");
 
 					/*UE_LOG(LogTemp, Warning, TEXT("number of quests: %d"), QuestArray.Num());
 					for (int j = 0; j < QuestArray.Num(); j++)

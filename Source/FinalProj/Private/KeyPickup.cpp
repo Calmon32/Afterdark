@@ -2,6 +2,7 @@
 
 #include "KeyPickup.h"
 #include "Components/StaticMeshComponent.h"
+#include "Public/GameStateMultiplayer.h"
 #include "Net/UnrealNetwork.h"
 
 AKeyPickup::AKeyPickup() {
@@ -22,7 +23,10 @@ void AKeyPickup::PickedUpBy(APawn * Pawn)
 {
 	Super::PickedUpBy(Pawn);
 	if (Role == ROLE_Authority) {
-		SetLifeSpan(1.0f);
+		AGameStateMultiplayer* const gamestate = GetWorld() != NULL ? GetWorld()->GetGameState<AGameStateMultiplayer>() : NULL;
+		GLog->Log("add to keys");
+		gamestate->KeyCaught();
+		Destroy(this);
 	}
 }
 

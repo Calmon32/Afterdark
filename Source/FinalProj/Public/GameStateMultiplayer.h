@@ -16,13 +16,24 @@ class FINALPROJ_API AGameStateMultiplayer : public AGameState
 
 public:
 
+	virtual void BeginPlay() override;
+
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Key")
-	void NotifyKeyCaught();
+	UFUNCTION(BlueprintCallable, Category = "Key")
+	void KeyCaught();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerKeyCaught();
+	void ServerKeyCaught_Implementation();
+	bool ServerKeyCaught_Validate();
+
+	UFUNCTION(BlueprintCallable, Category = "Key")
+	int GetKeysCaught();
 
 private:
 
+	UPROPERTY(Replicated)
 	int KeysCaught;
 	
 };
