@@ -24,18 +24,3 @@ void ADoor::Tick(float DeltaTime)
 
 }
 
-
-
-void ADoor::AddProgress()
-{
-	if (Role == ROLE_Authority)
-	{
-		Progress++;
-		if (Progress >= 3)
-		{
-			IsComplete = true;
-			GLog->Log("The Door is unlocked!");
-		}
-	}
-}
-

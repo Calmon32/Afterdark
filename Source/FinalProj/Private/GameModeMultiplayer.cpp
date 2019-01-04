@@ -4,6 +4,8 @@
 #include "PlayerControllerMultiplayer.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerStateMultiplayer.h"
+#include "PlayerControllerMultiplayer.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 
 
@@ -23,8 +25,8 @@ void AGameModeMultiplayer::BeginPlay() {
 	UE_LOG(LogTemp, Warning, TEXT("PLAYERS: %d"), expectedPlayerCount);
 	isServer = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "IsServer")));
 	UE_LOG(LogTemp, Warning, TEXT("IsServer: %d"), isServer);
-	enemyPlayer = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "EnemyPlayer")));
-	UE_LOG(LogTemp, Warning, TEXT("EnemyPlayer: %d"), enemyPlayer);
+	enemyPlayer = UGameplayStatics::ParseOption(OptionsString, "EnemyPlayer");
+	UE_LOG(LogTemp, Warning, TEXT("EnemyPlayer: %s"), *enemyPlayer);
 
 	UE_LOG(LogTemp, Warning, TEXT("MAPNAME: %s"), *GetWorld()->GetMapName());
 
@@ -48,18 +50,11 @@ bool AGameModeMultiplayer::ReadyToStartMatch_Implementation() {
 void AGameModeMultiplayer::PostLogin(APlayerController * NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-	PlayerControllerList.Add(Cast<APlayerControllerMultiplayer>(NewPlayer));
+	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(NewPlayer);
+	PlayerControllerList.Add(pcontroller);
 	playercount++;
-	if (playercount == enemyPlayer)
-	{
-		if (IsValid(NewPlayer->GetPawn())) {
-			Destroy(NewPlayer->GetPawn());
-			FVector Location(0.0f, 0.0f, 0.0f);
-			FRotator Rotation(0.0f, 0.0f, 0.0f);
-			FActorSpawnParameters SpawnInfo;
-			AActor* const SpawnedPickup = GetWorld()->SpawnActor<AActor>(EnemyPawn, Location, Rotation, SpawnInfo);
-		}
-	}
+	APlayerStateMultiplayer* playerstate = Cast<APlayerStateMultiplayer>(NewPlayer->PlayerState);
+	
 	GLog->Log("Player Joined");
 }
 
@@ -68,8 +63,17 @@ FString AGameModeMultiplayer::InitNewPlayer(APlayerController * NewPlayerControl
 	Super::InitNewPlayer(NewPlayerController, UniqueId, Options, Portal);
 	UE_LOG(LogTemp, Warning, TEXT("PlayerOptions: %s"), *Options);
 
-	FString playername = UGameplayStatics::ParseOption(Options, TEXT("Name"));
+	FString playername = UGameplayStatics::ParseOption(Options, TEXT("PlayerName"));
+	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(NewPlayerController);
 	ChangeName(NewPlayerController, playername, true);
+
+	UE_LOG(LogTemp, Warning, TEXT("ENEMY: %s == %s"), *playername, *enemyPlayer);
+	if (playername == enemyPlayer)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ISENEMY"));
+		pcontroller->IsEnemy = true;
+	}
+
 
 	/*
 	bool IsEnemy = FCString::Stricmp(*UGameplayStatics::ParseOption(Options, TEXT("IsEnemy")), TEXT("1")) == 0;
@@ -84,4 +88,19 @@ AActor * AGameModeMultiplayer::ChoosePlayerStart_Implementation(AController * Pl
 	AActor* spawn = SpawnPoints[index];
 	SpawnPoints.RemoveAt(index);
 	return spawn;	
+}
+
+
+UClass* AGameModeMultiplayer::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+	UE_LOG(LogTemp, Warning, TEXT("GETPAWN"));
+	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(InController);
+	if (pcontroller->IsEnemy)
+	{
+		return EnemyPawn;
+	}
+	else
+	{
+		return DefaultPawnClass;
+	}
 }

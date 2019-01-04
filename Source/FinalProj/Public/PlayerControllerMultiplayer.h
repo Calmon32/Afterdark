@@ -18,5 +18,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ServerConnect")
 	void ConnectToHostLobby(FString ipAddress);
+
+	bool IsEnemy;
 	
 };

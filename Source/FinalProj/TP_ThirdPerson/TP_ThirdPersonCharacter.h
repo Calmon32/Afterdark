@@ -29,6 +29,8 @@ public:
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	virtual void Tick(float DeltaTime) override;
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -36,6 +38,9 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+
+	bool IsInteractButtonPressed;
+	float HoldInteractTime;
 
 protected:
 
@@ -56,12 +61,6 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
-	/** Handler for when a touch input begins. */
-	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
-
-	/** Handler for when a touch input stops. */
-	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 protected:
 	// APawn interface
@@ -85,6 +84,13 @@ protected:
 	bool ServerToggleCrouch_Validate();
 
 	void DoThisShit_Implementation(APickUp* pickup);
+
+	void ReleasedButton();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerReleasedButton();
+	void ServerReleasedButton_Implementation();
+	bool ServerReleasedButton_Validate();
 
 public:
 	/** Returns CameraBoom subobject **/

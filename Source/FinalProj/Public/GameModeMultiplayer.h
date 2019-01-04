@@ -32,13 +32,13 @@ public:
 	TArray<class APlayerControllerMultiplayer*> PlayerControllerList;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
-	TSubclassOf<class ACharacter> EnemyPawn;
+	TSubclassOf<ACharacter> EnemyPawn;
 
 private:
 
 	bool loaded;
 
-	int enemyPlayer;
+	FString enemyPlayer;
 
 	virtual bool ReadyToStartMatch_Implementation() override;
 
@@ -47,6 +47,8 @@ private:
 	virtual FString InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal = TEXT("")) override;
 
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
 	TArray<AActor*> SpawnPoints;
 	

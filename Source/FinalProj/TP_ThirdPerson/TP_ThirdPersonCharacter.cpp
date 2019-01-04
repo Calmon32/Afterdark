@@ -7,9 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
-
 #include "Components/SphereComponent.h"
-#include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Pickup.h"
 #include "Vector.h"
@@ -62,11 +60,31 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	CollectionSphere->SetSphereRadius(CollectionSphereRadius);
 
 	isCrouched = false;
+
+	IsInteractButtonPressed = false;
+	HoldInteractTime = 0.0f;
+
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
-
+void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
+{
+	if (Role == ROLE_Authority)
+	{
+		if (IsInteractButtonPressed)
+		{
+			HoldInteractTime += DeltaTime;
+			UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
+			if (HoldInteractTime >= 8.0f)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("OPENNED DOOR"));
+			}
+		}
+		else
+		{
+			HoldInteractTime = 0.0f;
+		}
+	}
+}
 
 void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -87,6 +105,7 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* 
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATP_ThirdPersonCharacter::ToggleCrouch);
 	PlayerInputComponent->BindAction("CollectPickups", IE_Pressed, this, &ATP_ThirdPersonCharacter::CollectPickups);
+	PlayerInputComponent->BindAction("CollectPickups", IE_Released, this, &ATP_ThirdPersonCharacter::ReleasedButton);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -96,20 +115,8 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ATP_ThirdPersonCharacter::LookUpAtRate);
 
-	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ATP_ThirdPersonCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ATP_ThirdPersonCharacter::TouchStopped);
 }
 
-void ATP_ThirdPersonCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		Jump();
-}
-
-void ATP_ThirdPersonCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		StopJumping();
-}
 
 void ATP_ThirdPersonCharacter::TurnAtRate(float Rate)
 {
@@ -195,10 +202,30 @@ void ATP_ThirdPersonCharacter::DoThisShit_Implementation(APickUp * pickup)
 	CollectedPickup(pickup);
 }
 
+void ATP_ThirdPersonCharacter::ReleasedButton()
+{
+	ServerReleasedButton();
+}
+
+void ATP_ThirdPersonCharacter::ServerReleasedButton_Implementation()
+{
+	if (Role == ROLE_Authority)
+	{
+		IsInteractButtonPressed = false;
+	}
+}
+
+bool ATP_ThirdPersonCharacter::ServerReleasedButton_Validate()
+{
+	return true;
+}
+
 void ATP_ThirdPersonCharacter::ServerCollectPickups_Implementation()
 {
 	if (Role == ROLE_Authority)
 	{
+		IsInteractButtonPressed = true;
+
 		TArray<AActor*> CollectedActors;
 		CollectionSphere->GetOverlappingActors(CollectedActors);
 

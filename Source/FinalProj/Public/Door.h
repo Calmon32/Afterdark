@@ -23,13 +23,5 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Keys")
-		bool IsComplete;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Keys")
-		int Progress;
-
-	UFUNCTION(BlueprintCallable, Category = "Keys")
-		void AddProgress();
 
 };
