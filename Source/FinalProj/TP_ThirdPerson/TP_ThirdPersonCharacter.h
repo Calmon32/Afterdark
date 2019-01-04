@@ -79,6 +79,11 @@ protected:
 	void CollectedPickup(APickUp* pickup);
 	void CollectedPickup_Implementation(APickUp* pickup);
 
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerToggleCrouch();
+	void ServerToggleCrouch_Implementation();
+	bool ServerToggleCrouch_Validate();
+
 	void DoThisShit_Implementation(APickUp* pickup);
 
 public:
@@ -88,12 +93,14 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	//Movement
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UFUNCTION(BlueprintCallable, Category=movement)
 	void ToggleCrouch();
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	//bool CrouchButtonDown;
 private:
+
+	bool isCrouched;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Battery", Meta = (AllowPrivateAccess = "true"))
 	float CollectionSphereRadius;

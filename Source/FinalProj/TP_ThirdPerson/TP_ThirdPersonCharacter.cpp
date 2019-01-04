@@ -14,6 +14,8 @@
 #include "Pickup.h"
 #include "Vector.h"
 #include "KeyPickup.h"
+#include "Door.h"
+#include "Public/GameStateMultiplayer.h"
 //#include "Runtime/Engine/Classes/Engine/World.h"
 
 
@@ -59,6 +61,8 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
 	CollectionSphere->SetupAttachment(RootComponent);
 	CollectionSphere->SetSphereRadius(CollectionSphereRadius);
+
+	isCrouched = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -151,8 +155,8 @@ void ATP_ThirdPersonCharacter::MoveRight(float Value)
 
 void ATP_ThirdPersonCharacter::ToggleCrouch()
 {
-
-		GLog->Log("iCrouch");
+	ServerToggleCrouch();
+	GLog->Log("iCrouch");
 		
 		//CrouchButtonDown = true;
 }
@@ -162,6 +166,28 @@ void ATP_ThirdPersonCharacter::CollectPickups() {
 }
 
 bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
+	return true;
+}
+
+void ATP_ThirdPersonCharacter::ServerToggleCrouch_Implementation()
+{
+	if (Role == ROLE_Authority) {
+
+		UCharacterMovementComponent* Charmove = GetCharacterMovement();
+		if (isCrouched) {
+			Charmove->MaxWalkSpeed = 600.0f;
+			isCrouched = false;
+		}
+		else {
+			Charmove->MaxWalkSpeed = 300.0f;
+			isCrouched = true;
+		}
+		
+	}
+}
+
+bool ATP_ThirdPersonCharacter::ServerToggleCrouch_Validate()
+{
 	return true;
 }
 
@@ -184,6 +210,11 @@ void ATP_ThirdPersonCharacter::ServerCollectPickups_Implementation()
 			{
 				if (AKeyPickup* const TestBattery = Cast<AKeyPickup>(TestPickup))
 				{
+
+					//ADoor* door->AddProgress();
+					AGameStateMultiplayer* const gamestate = GetWorld() != NULL ? GetWorld()->GetGameState<AGameStateMultiplayer>() : NULL;
+					GLog->Log("add to keys");
+
 					/*UE_LOG(LogTemp, Warning, TEXT("number of quests: %d"), QuestArray.Num());
 					for (int j = 0; j < QuestArray.Num(); j++)
 					{
