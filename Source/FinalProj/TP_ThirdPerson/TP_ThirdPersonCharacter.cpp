@@ -38,7 +38,7 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
-	GetCharacterMovement()->JumpZVelocity = 600.f;
+	GetCharacterMovement()->JumpZVelocity = 400.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
@@ -155,7 +155,16 @@ void ATP_ThirdPersonCharacter::MoveRight(float Value)
 void ATP_ThirdPersonCharacter::ToggleCrouch()
 {
 	ServerToggleCrouch();
-	GLog->Log("iCrouch");
+	UCharacterMovementComponent* Charmove = GetCharacterMovement();
+	if (isCrouched) {
+		Charmove->MaxWalkSpeed = 300.0f;
+		GLog->Log("is Crouch");
+	}
+	else {
+		Charmove->MaxWalkSpeed = 600.0f;
+		GLog->Log("is NOT Crouch");
+	}
+	//GLog->Log("iCrouch");
 		
 		//CrouchButtonDown = true;
 }
@@ -171,14 +180,16 @@ bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
 void ATP_ThirdPersonCharacter::ServerToggleCrouch_Implementation()
 {
 	if (Role == ROLE_Authority) {
-
+		//GLog->Log("is server toggle crouch");
 		UCharacterMovementComponent* Charmove = GetCharacterMovement();
 		if (isCrouched) {
-			Charmove->MaxWalkSpeed = 600.0f;
+			Charmove->MaxWalkSpeed = 300.0f;
+			//GLog->Log("is Crouch");
 			isCrouched = false;
 		}
 		else {
-			Charmove->MaxWalkSpeed = 300.0f;
+			Charmove->MaxWalkSpeed = 600.0f;
+			//GLog->Log("is NOT Crouch");
 			isCrouched = true;
 		}
 		
