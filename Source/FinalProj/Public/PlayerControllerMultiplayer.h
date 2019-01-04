@@ -13,5 +13,10 @@ UCLASS()
 class FINALPROJ_API APlayerControllerMultiplayer : public APlayerController
 {
 	GENERATED_BODY()
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "ServerConnect")
+	void ConnectToHostLobby(FString ipAddress);
 	
 };

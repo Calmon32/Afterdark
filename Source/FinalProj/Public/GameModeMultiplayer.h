@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "PlayerControllerMultiplayer.h"
+
+#include "GameFramework/Character.h"
 #include "GameModeMultiplayer.generated.h"
 
 /**
@@ -24,15 +26,25 @@ public:
 	int expectedPlayerCount;
 	int playercount;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Server)
+	int isServer;
+
 	TArray<class APlayerControllerMultiplayer*> PlayerControllerList;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
+	TSubclassOf<class ACharacter> EnemyPawn;
 
 private:
 
 	bool loaded;
 
+	int enemyPlayer;
+
 	virtual bool ReadyToStartMatch_Implementation() override;
 
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	virtual FString InitNewPlayer(APlayerController* NewPlayerController, const FUniqueNetIdRepl& UniqueId, const FString& Options, const FString& Portal = TEXT("")) override;
 
 	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 

@@ -13,5 +13,16 @@ UCLASS()
 class FINALPROJ_API AGameStateMultiplayer : public AGameState
 {
 	GENERATED_BODY()
+
+public:
+
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Key")
+	void NotifyKeyCaught();
+
+private:
+
+	int KeysCaught;
 	
 };
