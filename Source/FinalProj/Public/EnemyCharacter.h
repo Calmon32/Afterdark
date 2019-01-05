@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Trap.h"
 #include "EnemyCharacter.generated.h"
 
 UCLASS()
@@ -26,6 +27,11 @@ public:
 
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	bool IsInteractButtonPressed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = Door)
+	float HoldInteractTime;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -33,6 +39,23 @@ protected:
 	void MoveForward(float Value);
 
 	void MoveRight(float Value);
+
+	void ReleasedButton();
+
+	void PressedButton();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerReleasedButton();
+	void ServerReleasedButton_Implementation();
+	bool ServerReleasedButton_Validate();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerPressedButton();
+	void ServerPressedButton_Implementation();
+	bool ServerPressedButton_Validate();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = Trap)
+	int AvailableTraps;
 
 public:	
 
@@ -48,10 +71,13 @@ public:
 	void ServerBasicAttack_Implementation();
 	bool ServerBasicAttack_Validate();
 
+	UFUNCTION(BlueprintCallable, Category = "Attack")
+	void PlaceTrap();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
+	TSubclassOf<class ATrap> WhatToSpawn;
 
 private:
-
-	bool isCrouched;
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
 	float CollectionSphereRadius;

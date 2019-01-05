@@ -68,13 +68,14 @@ FString AGameModeMultiplayer::InitNewPlayer(APlayerController * NewPlayerControl
 	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(NewPlayerController);
 	ChangeName(NewPlayerController, playername, true);
 
+	//playername = "Lucas";
+
 	UE_LOG(LogTemp, Warning, TEXT("ENEMY: %s == %s"), *playername, *enemyPlayer);
 	if (playername == enemyPlayer)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ISENEMY"));
 		pcontroller->IsEnemy = true;
 	}
-
 
 	/*
 	bool IsEnemy = FCString::Stricmp(*UGameplayStatics::ParseOption(Options, TEXT("IsEnemy")), TEXT("1")) == 0;

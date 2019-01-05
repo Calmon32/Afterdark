@@ -3,6 +3,19 @@
 #include "PlayerControllerMultiplayer.h"
 #include "Kismet/GameplayStatics.h"
 
+APlayerControllerMultiplayer::APlayerControllerMultiplayer() 
+{
+	IsInputDisabled = false;
+}
+
+void APlayerControllerMultiplayer::Tick(float DeltaTime) 
+{
+	if (IsInputDisabled)
+	{
+		PlayerInput = nullptr;
+	}
+}
+
 void APlayerControllerMultiplayer::ConnectToHostLobby(FString ipAddress)
 {
 	UWorld* world = this->GetWorld();
@@ -16,4 +29,26 @@ void APlayerControllerMultiplayer::ConnectToHostLobby(FString ipAddress)
 		UE_LOG(LogTemp, Warning, TEXT("ConnectToHostLobby >> Connecting to host."));
 		pc->ClientTravel(ipAddress, TRAVEL_Absolute);
 	}
+}
+
+void APlayerControllerMultiplayer::DisableMove_Implementation()
+{
+	GLog->Log("DISABLED!");
+	IsInputDisabled = true;
+}
+
+bool APlayerControllerMultiplayer::DisableMove_Validate()
+{
+	return true;
+}
+
+void APlayerControllerMultiplayer::EnableMove_Implementation()
+{
+	GLog->Log("ENABLED!");
+	IsInputDisabled = false;
+}
+
+bool APlayerControllerMultiplayer::EnableMove_Validate()
+{
+	return true;
 }

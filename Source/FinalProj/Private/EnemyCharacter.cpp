@@ -6,6 +6,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
+#include "Trap.h"
 #include "DrawDebugHelpers.h"
 #include "Net/UnrealNetwork.h"
 
@@ -46,7 +47,7 @@ AEnemyCharacter::AEnemyCharacter()
 	CollectionSphere->SetupAttachment(RootComponent);
 	CollectionSphere->SetSphereRadius(CollectionSphereRadius);
 
-	isCrouched = false;
+	IsInteractButtonPressed = false;
 
 }
 
@@ -59,14 +60,32 @@ void AEnemyCharacter::BeginPlay()
 void AEnemyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	if (Role == ROLE_Authority)
+	{
+		if (IsInteractButtonPressed)
+		{
+			HoldInteractTime += DeltaTime;
+			UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
+			if (HoldInteractTime >= 4.0f)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Trap Placed!"));
+				PlaceTrap();
+				IsInteractButtonPressed = false;
+			}
+		}
+		else
+		{
+			HoldInteractTime = 0.0f;
+		}
+	}
 }
 
 void AEnemyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//DOREPLIFETIME(AEnemyCharacter, CollectionSphereRadius);
+	DOREPLIFETIME(AEnemyCharacter, AvailableTraps);
+	DOREPLIFETIME(AEnemyCharacter, HoldInteractTime);
 }
 
 void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -78,8 +97,8 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	PlayerInputComponent->BindAxis("MoveForward", this, &AEnemyCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AEnemyCharacter::MoveRight);
 
-	//PlayerInputComponent->BindAction("CollectPickups", IE_Pressed, this, &AEnemyCharacter::CollectPickups);
-	//PlayerInputComponent->BindAction("CollectPickups", IE_Released, this, &AEnemyCharacter::ReleasedButton);
+	PlayerInputComponent->BindAction("CollectPickups", IE_Pressed, this, &AEnemyCharacter::PressedButton);
+	PlayerInputComponent->BindAction("CollectPickups", IE_Released, this, &AEnemyCharacter::ReleasedButton);
 
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
@@ -117,6 +136,45 @@ bool AEnemyCharacter::ServerBasicAttack_Validate()
 	return true;
 }
 
+void AEnemyCharacter::PlaceTrap()
+{
+	if (Role == ROLE_Authority)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = Instigator;
+
+		FVector SpawnLocation = GetActorLocation();
+		FVector Pos = SpawnLocation;
+
+		FHitResult OutHit;
+		FVector DownVector = FVector(0, 0, -1);
+		FVector End = ((DownVector * 10000000.f) + SpawnLocation);
+
+		FCollisionQueryParams CollisionParams;
+
+		FRotator SpawnRotation;
+		SpawnRotation = GetActorRotation();
+
+		DrawDebugLine(GetWorld(), SpawnLocation, End, FColor::Green, false, 1, 0, 1);
+
+		if (GetWorld()->LineTraceSingleByChannel(OutHit, SpawnLocation, End, ECC_Visibility, CollisionParams))
+		{
+			if (OutHit.bBlockingHit)
+			{
+				Pos = OutHit.ImpactPoint;
+				//OutHit.ImpactNormal
+				//SpawnRotation.Vector
+			}
+		}
+
+		ATrap* const SpawnedPickup = GetWorld()->SpawnActor<ATrap>(WhatToSpawn, Pos, SpawnRotation, SpawnParams);
+
+		GLog->Log("Added One");
+	}
+}
+
+
 void AEnemyCharacter::MoveForward(float Value)
 {
 	if ((Controller != NULL) && (Value != 0.0f))
@@ -144,4 +202,40 @@ void AEnemyCharacter::MoveRight(float Value)
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
+}
+
+void AEnemyCharacter::ReleasedButton()
+{
+	ServerReleasedButton();
+}
+
+void AEnemyCharacter::ServerReleasedButton_Implementation()
+{
+	if (Role == ROLE_Authority)
+	{
+		IsInteractButtonPressed = false;
+	}
+}
+
+bool AEnemyCharacter::ServerReleasedButton_Validate()
+{
+	return true;
+}
+
+void AEnemyCharacter::PressedButton()
+{
+	ServerPressedButton();
+}
+
+void AEnemyCharacter::ServerPressedButton_Implementation()
+{
+	if (Role == ROLE_Authority)
+	{
+		IsInteractButtonPressed = true;
+	}
+}
+
+bool AEnemyCharacter::ServerPressedButton_Validate()
+{
+	return true;
 }
