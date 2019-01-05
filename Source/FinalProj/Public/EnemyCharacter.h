@@ -54,8 +54,15 @@ protected:
 	void ServerPressedButton_Implementation();
 	bool ServerPressedButton_Validate();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = Trap)
+	UFUNCTION(Reliable, Server, WithValidation)
+	void ServerAttackSlow();
+	void ServerAttackSlow_Implementation();
+	bool ServerAttackSlow_Validate();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated, Category = Trap)
 	int AvailableTraps;
+
+	void ResetSpeed();
 
 public:	
 
@@ -76,6 +83,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
 	TSubclassOf<class ATrap> WhatToSpawn;
+
+	UFUNCTION(BlueprintCallable, Category = "Attack")
+	void AttackSlow();
 
 private:
 

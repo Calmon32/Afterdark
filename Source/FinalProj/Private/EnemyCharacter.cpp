@@ -6,6 +6,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
+#include "TimerManager.h"
 #include "Trap.h"
 #include "DrawDebugHelpers.h"
 #include "Net/UnrealNetwork.h"
@@ -238,4 +239,37 @@ void AEnemyCharacter::ServerPressedButton_Implementation()
 bool AEnemyCharacter::ServerPressedButton_Validate()
 {
 	return true;
+}
+
+void AEnemyCharacter::ServerAttackSlow_Implementation()
+{
+	if (Role == ROLE_Authority)
+	{
+		UCharacterMovementComponent* Charmove = GetCharacterMovement();
+		Charmove->MaxWalkSpeed = 300.0f;
+		FTimerHandle UnusedHandle;
+		GetWorldTimerManager().SetTimer(UnusedHandle, this, &AEnemyCharacter::ResetSpeed, 1.3f, false);
+	}
+}
+
+bool AEnemyCharacter::ServerAttackSlow_Validate()
+{
+	return true;
+}
+
+
+void AEnemyCharacter::AttackSlow()
+{
+	ServerAttackSlow();
+	UCharacterMovementComponent* Charmove = GetCharacterMovement();
+	Charmove->MaxWalkSpeed = 300.0f;
+	FTimerHandle UnusedHandle;
+	GetWorldTimerManager().SetTimer(UnusedHandle, this, &AEnemyCharacter::ResetSpeed, 1.3f, false);
+}
+
+
+void AEnemyCharacter::ResetSpeed()
+{
+	UCharacterMovementComponent* Charmove = GetCharacterMovement();
+	Charmove->MaxWalkSpeed = 600.0f;
 }
