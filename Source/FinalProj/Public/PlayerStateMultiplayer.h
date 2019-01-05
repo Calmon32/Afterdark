@@ -18,4 +18,15 @@ public:
 
 	APlayerStateMultiplayer();
 
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = Gameplay)
+	bool IsEnemy;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = Gameplay)
+	bool HasEscaped;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = Gameplay)
+	bool HasDied;
+
 };

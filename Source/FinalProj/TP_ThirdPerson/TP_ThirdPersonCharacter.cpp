@@ -8,6 +8,8 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
+#include "Public/GameStateMultiplayer.h"
+#include "PlayerStateMultiplayer.h"
 #include "Net/UnrealNetwork.h"
 #include "Pickup.h"
 #include "Vector.h"
@@ -70,13 +72,15 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (IsInteractButtonPressed)
+		AGameStateMultiplayer* const gamestate = GetWorld() != NULL ? GetWorld()->GetGameState<AGameStateMultiplayer>() : NULL;
+		if (gamestate->GetKeysCaught() >= 3 && IsInteractButtonPressed && IsValid(DoorInteract))
 		{
 			HoldInteractTime += DeltaTime;
 			UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
 			if (HoldInteractTime >= 8.0f)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("OPENNED DOOR"));
+				DoorInteract->OpenDoor();
 			}
 		}
 		else
@@ -91,6 +95,7 @@ void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, CollectionSphereRadius);
+	DOREPLIFETIME(ATP_ThirdPersonCharacter, HoldInteractTime);
 }
 
 void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -128,6 +133,15 @@ void ATP_ThirdPersonCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ATP_ThirdPersonCharacter::SetEscaped()
+{
+	if (Role == ROLE_Authority)
+	{
+		Cast<APlayerStateMultiplayer>(GetPlayerState())->HasEscaped = true;
+		Destroy(this);
+	}
 }
 
 void ATP_ThirdPersonCharacter::MoveForward(float Value)

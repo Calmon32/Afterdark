@@ -54,6 +54,7 @@ void AGameModeMultiplayer::PostLogin(APlayerController * NewPlayer)
 	PlayerControllerList.Add(pcontroller);
 	playercount++;
 	APlayerStateMultiplayer* playerstate = Cast<APlayerStateMultiplayer>(NewPlayer->PlayerState);
+	playerstate->IsEnemy = pcontroller->IsEnemy;
 	
 	GLog->Log("Player Joined");
 }

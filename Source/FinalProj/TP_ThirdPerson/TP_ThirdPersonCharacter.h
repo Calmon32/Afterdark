@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "PickUp.h"
+#include "Door.h"
 #include "TP_ThirdPersonCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -31,6 +32,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
+	ADoor* DoorInteract;
+
+
+
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseTurnRate;
@@ -40,7 +46,12 @@ public:
 	float BaseLookUpRate;
 
 	bool IsInteractButtonPressed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = Door)
 	float HoldInteractTime;
+
+	UFUNCTION(BlueprintCallable, Category = "Gameplay")
+	void SetEscaped();
 
 protected:
 
