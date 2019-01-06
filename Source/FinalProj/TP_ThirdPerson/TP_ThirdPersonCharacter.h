@@ -122,6 +122,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = movement)
 	void DealDamage();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	float WalkSpeed;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	float CrouchSpeed;
+
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	//bool CrouchButtonDown;
 private:

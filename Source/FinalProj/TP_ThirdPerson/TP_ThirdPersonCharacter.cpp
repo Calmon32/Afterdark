@@ -69,6 +69,9 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	TotalHealth = 2;
 	CurrentHealth = TotalHealth;
 
+	UCharacterMovementComponent* Charmove = GetCharacterMovement();
+	Charmove->MaxWalkSpeed = WalkSpeed;
+
 }
 
 void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
@@ -185,11 +188,11 @@ void ATP_ThirdPersonCharacter::ToggleCrouch()
 	ServerToggleCrouch();
 	UCharacterMovementComponent* Charmove = GetCharacterMovement();
 	if (isCrouched) {
-		Charmove->MaxWalkSpeed = 300.0f;
+		Charmove->MaxWalkSpeed = CrouchSpeed;
 		GLog->Log("is Crouch");
 	}
 	else {
-		Charmove->MaxWalkSpeed = 600.0f;
+		Charmove->MaxWalkSpeed = WalkSpeed;
 		GLog->Log("is NOT Crouch");
 	}
 	//GLog->Log("iCrouch");
@@ -219,12 +222,12 @@ void ATP_ThirdPersonCharacter::ServerToggleCrouch_Implementation()
 		//GLog->Log("is server toggle crouch");
 		UCharacterMovementComponent* Charmove = GetCharacterMovement();
 		if (isCrouched) {
-			Charmove->MaxWalkSpeed = 300.0f;
+			Charmove->MaxWalkSpeed = CrouchSpeed;
 			//GLog->Log("is Crouch");
 			isCrouched = false;
 		}
 		else {
-			Charmove->MaxWalkSpeed = 600.0f;
+			Charmove->MaxWalkSpeed = WalkSpeed;
 			//GLog->Log("is NOT Crouch");
 			isCrouched = true;
 		}
