@@ -1,11 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GameStateMultiplayer.h"
+#include "PlayerStateMultiplayer.h"
 #include "Net/UnrealNetwork.h"
 
+AGameStateMultiplayer::AGameStateMultiplayer() 
+{
+	PrimaryActorTick.bCanEverTick = true;
+}
+
 void AGameStateMultiplayer::BeginPlay() {
+
 	KeysCaught = 0;
 }
+
 
 void AGameStateMultiplayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -35,4 +43,9 @@ bool AGameStateMultiplayer::ServerKeyCaught_Validate()
 int AGameStateMultiplayer::GetKeysCaught()
 {
 	return KeysCaught;
+}
+
+int AGameStateMultiplayer::GetPlayersLeft()
+{
+	return PlayersLeft;
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SphereComponent.h"
+#include "../TP_ThirdPerson/TP_ThirdPersonCharacter.h"
 #include "TimerManager.h"
 #include "Trap.h"
 #include "DrawDebugHelpers.h"
@@ -55,6 +56,8 @@ AEnemyCharacter::AEnemyCharacter()
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetActorLocation(TargetLocation);
 	
 }
 
@@ -63,7 +66,7 @@ void AEnemyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (Role == ROLE_Authority)
 	{
-		if (IsInteractButtonPressed)
+		if (IsInteractButtonPressed && AvailableTraps > 0)
 		{
 			HoldInteractTime += DeltaTime;
 			UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
@@ -128,6 +131,11 @@ void AEnemyCharacter::ServerBasicAttack_Implementation()
 		for (int i = 0; i < SweepResults.Num(); i++)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("COLLISION: %s"), *SweepResults[i].GetActor()->GetName());
+			ATP_ThirdPersonCharacter* const player = Cast<ATP_ThirdPersonCharacter>(SweepResults[i].GetActor());
+			if (SweepResults[i].GetActor() != this && player != NULL)
+			{
+				player->DealDamage();
+			}
 		}
 	}
 }
@@ -171,6 +179,8 @@ void AEnemyCharacter::PlaceTrap()
 
 		ATrap* const SpawnedPickup = GetWorld()->SpawnActor<ATrap>(WhatToSpawn, Pos, SpawnRotation, SpawnParams);
 
+		AvailableTraps--;
+
 		GLog->Log("Added One");
 	}
 }
@@ -178,7 +188,7 @@ void AEnemyCharacter::PlaceTrap()
 
 void AEnemyCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller != NULL) && (Value != 0.0f) && (!IsInteractButtonPressed))
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -192,7 +202,7 @@ void AEnemyCharacter::MoveForward(float Value)
 
 void AEnemyCharacter::MoveRight(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller != NULL) && (Value != 0.0f) && (!IsInteractButtonPressed))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -208,6 +218,7 @@ void AEnemyCharacter::MoveRight(float Value)
 void AEnemyCharacter::ReleasedButton()
 {
 	ServerReleasedButton();
+	IsInteractButtonPressed = false;
 }
 
 void AEnemyCharacter::ServerReleasedButton_Implementation()
@@ -226,6 +237,7 @@ bool AEnemyCharacter::ServerReleasedButton_Validate()
 void AEnemyCharacter::PressedButton()
 {
 	ServerPressedButton();
+	IsInteractButtonPressed = true;
 }
 
 void AEnemyCharacter::ServerPressedButton_Implementation()

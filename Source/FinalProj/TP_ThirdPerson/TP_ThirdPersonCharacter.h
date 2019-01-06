@@ -103,6 +103,12 @@ protected:
 	void ServerReleasedButton_Implementation();
 	bool ServerReleasedButton_Validate();
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	int CurrentHealth;
+
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
+	int TotalHealth;
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -112,6 +118,9 @@ public:
 	//Movement
 	UFUNCTION(BlueprintCallable, Category=movement)
 	void ToggleCrouch();
+
+	UFUNCTION(BlueprintCallable, Category = movement)
+	void DealDamage();
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	//bool CrouchButtonDown;

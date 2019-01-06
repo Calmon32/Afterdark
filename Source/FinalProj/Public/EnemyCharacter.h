@@ -87,6 +87,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attack")
 	void AttackSlow();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy", Meta = (MakeEditWidget = true))
+	FVector TargetLocation;
+
 private:
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))

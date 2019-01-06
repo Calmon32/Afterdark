@@ -23,6 +23,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
+
+
 	int expectedPlayerCount;
 	int playercount;
 
@@ -33,6 +36,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
 	TSubclassOf<ACharacter> EnemyPawn;
+
+	void CloseGame();
 
 private:
 
@@ -51,5 +56,8 @@ private:
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
 	TArray<AActor*> SpawnPoints;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
+	bool DebugMode;
 	
 };

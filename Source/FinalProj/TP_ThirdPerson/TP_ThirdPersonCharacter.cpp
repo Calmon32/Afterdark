@@ -66,6 +66,9 @@ ATP_ThirdPersonCharacter::ATP_ThirdPersonCharacter()
 	IsInteractButtonPressed = false;
 	HoldInteractTime = 0.0f;
 
+	TotalHealth = 2;
+	CurrentHealth = TotalHealth;
+
 }
 
 void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
@@ -81,6 +84,7 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("OPENNED DOOR"));
 				DoorInteract->OpenDoor();
+				IsInteractButtonPressed = false;
 			}
 		}
 		else
@@ -96,6 +100,9 @@ void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, CollectionSphereRadius);
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, HoldInteractTime);
+	DOREPLIFETIME(ATP_ThirdPersonCharacter, TotalHealth);
+	DOREPLIFETIME(ATP_ThirdPersonCharacter, CurrentHealth);
+
 }
 
 void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -188,6 +195,14 @@ void ATP_ThirdPersonCharacter::ToggleCrouch()
 	//GLog->Log("iCrouch");
 		
 		//CrouchButtonDown = true;
+}
+
+void ATP_ThirdPersonCharacter::DealDamage()
+{
+	if (Role == ROLE_Authority)
+	{
+		CurrentHealth--;
+	}
 }
 
 void ATP_ThirdPersonCharacter::CollectPickups() {

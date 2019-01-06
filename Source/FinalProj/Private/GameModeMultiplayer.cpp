@@ -6,11 +6,14 @@
 #include "Kismet/GameplayStatics.h"
 #include "PlayerStateMultiplayer.h"
 #include "PlayerControllerMultiplayer.h"
+#include "GameStateMultiplayer.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 
 
 AGameModeMultiplayer::AGameModeMultiplayer()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	loaded = false;
 
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnPoints);
@@ -30,17 +33,36 @@ void AGameModeMultiplayer::BeginPlay() {
 
 	UE_LOG(LogTemp, Warning, TEXT("MAPNAME: %s"), *GetWorld()->GetMapName());
 
+	AGameStateMultiplayer* gamesta = Cast<AGameStateMultiplayer>(GameState);
+	gamesta->ExpectedPlayerCount = expectedPlayerCount;
+
 	loaded = true;
 
 }
 
+void AGameModeMultiplayer::Tick(float DeltaTime)
+{
+
+}
+
+
+
+void AGameModeMultiplayer::CloseGame()
+{
+	if (Role == ROLE_Authority)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MATCH IS OVER!!!!!!!!"));
+		//FGenericPlatformMisc::RequestExit(true);
+	}
+}
 
 bool AGameModeMultiplayer::ReadyToStartMatch_Implementation() {
 	if (GetMatchState() == MatchState::WaitingToStart && loaded)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("READY: %d == %d"), expectedPlayerCount, playercount);
 		if (expectedPlayerCount == playercount)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("READY: %d == %d"), expectedPlayerCount, playercount);
+			UE_LOG(LogTemp, Warning, TEXT("MATCH STARTED!!!!!!!!"));
 			return true;
 		}
 	}
@@ -52,7 +74,6 @@ void AGameModeMultiplayer::PostLogin(APlayerController * NewPlayer)
 	Super::PostLogin(NewPlayer);
 	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(NewPlayer);
 	PlayerControllerList.Add(pcontroller);
-	playercount++;
 	APlayerStateMultiplayer* playerstate = Cast<APlayerStateMultiplayer>(NewPlayer->PlayerState);
 	playerstate->IsEnemy = pcontroller->IsEnemy;
 	
@@ -66,9 +87,10 @@ FString AGameModeMultiplayer::InitNewPlayer(APlayerController * NewPlayerControl
 
 	FString playername = UGameplayStatics::ParseOption(Options, TEXT("PlayerName"));
 	APlayerControllerMultiplayer* pcontroller = Cast<APlayerControllerMultiplayer>(NewPlayerController);
-	ChangeName(NewPlayerController, playername, true);
 
-	playername = "Lucas";
+	if(DebugMode) playername = "Lucas";
+
+	ChangeName(NewPlayerController, playername, false);
 
 	UE_LOG(LogTemp, Warning, TEXT("ENEMY: %s == %s"), *playername, *enemyPlayer);
 	if (playername == enemyPlayer)
@@ -77,6 +99,8 @@ FString AGameModeMultiplayer::InitNewPlayer(APlayerController * NewPlayerControl
 		pcontroller->IsEnemy = true;
 	}
 
+	playercount++;
+		
 	/*
 	bool IsEnemy = FCString::Stricmp(*UGameplayStatics::ParseOption(Options, TEXT("IsEnemy")), TEXT("1")) == 0;
 	if (IsEnemy) UE_LOG(LogTemp, Warning, TEXT("IsEnemy!"));
