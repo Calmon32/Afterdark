@@ -35,5 +35,11 @@ public:
 	void DisableMove();
 	void DisableMove_Implementation();
 	bool DisableMove_Validate();
+
+	UFUNCTION(BlueprintCallable, Category = State)
+	void ChangeState_Spectator();
+
+	UFUNCTION(BlueprintCallable, Category = State)
+	void ChangeState_Player();
 	
 };

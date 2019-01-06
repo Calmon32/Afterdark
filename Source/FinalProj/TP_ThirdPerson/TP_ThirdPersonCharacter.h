@@ -103,11 +103,17 @@ protected:
 	void ServerReleasedButton_Implementation();
 	bool ServerReleasedButton_Validate();
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadOnly, Category = "Health")
 	int CurrentHealth;
 
 	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health")
 	int TotalHealth;
+
+
+	UFUNCTION(Reliable, NetMulticast, WithValidation)
+	void ClientDied();
+	void ClientDied_Implementation();
+	bool ClientDied_Validate();
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -132,9 +138,10 @@ public:
 	//bool CrouchButtonDown;
 private:
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
 	bool isCrouched;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Battery", Meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
 	float CollectionSphereRadius;
 
 };

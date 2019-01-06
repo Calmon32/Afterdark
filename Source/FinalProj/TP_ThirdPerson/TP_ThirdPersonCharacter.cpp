@@ -10,9 +10,11 @@
 #include "Components/SphereComponent.h"
 #include "Public/GameStateMultiplayer.h"
 #include "PlayerStateMultiplayer.h"
+#include "PlayerControllerMultiplayer.h"
 #include "Net/UnrealNetwork.h"
 #include "Pickup.h"
 #include "Vector.h"
+#include "TimerManager.h"
 #include "KeyPickup.h"
 #include "Door.h"
 //#include "Runtime/Engine/Classes/Engine/World.h"
@@ -94,6 +96,27 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 		{
 			HoldInteractTime = 0.0f;
 		}
+
+		if (CurrentHealth <= 0.0f && GetLifeSpan() == 0.000f)
+		{
+			GLog->Log("PLAYER DIED");
+
+			ClientDied();
+			Cast<APlayerStateMultiplayer>(GetPlayerState())->HasDied = true;
+			FTimerHandle UnusedHandle;
+			GetWorldTimerManager().SetTimer(UnusedHandle, Cast<APlayerControllerMultiplayer>(GetController()), &APlayerControllerMultiplayer::ChangeState_Spectator, 10.0f, false);
+			SetLifeSpan(10.0f);
+		}
+
+	}
+
+	UCharacterMovementComponent* Charmove = GetCharacterMovement();
+
+	if (isCrouched) {
+		Charmove->MaxWalkSpeed = CrouchSpeed;
+	}
+	else {
+		Charmove->MaxWalkSpeed = WalkSpeed;
 	}
 }
 
@@ -105,7 +128,7 @@ void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, HoldInteractTime);
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, TotalHealth);
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, CurrentHealth);
-
+	DOREPLIFETIME(ATP_ThirdPersonCharacter, isCrouched);
 }
 
 void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -186,18 +209,6 @@ void ATP_ThirdPersonCharacter::MoveRight(float Value)
 void ATP_ThirdPersonCharacter::ToggleCrouch()
 {
 	ServerToggleCrouch();
-	UCharacterMovementComponent* Charmove = GetCharacterMovement();
-	if (isCrouched) {
-		Charmove->MaxWalkSpeed = CrouchSpeed;
-		GLog->Log("is Crouch");
-	}
-	else {
-		Charmove->MaxWalkSpeed = WalkSpeed;
-		GLog->Log("is NOT Crouch");
-	}
-	//GLog->Log("iCrouch");
-		
-		//CrouchButtonDown = true;
 }
 
 void ATP_ThirdPersonCharacter::DealDamage()
@@ -219,16 +230,11 @@ bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
 void ATP_ThirdPersonCharacter::ServerToggleCrouch_Implementation()
 {
 	if (Role == ROLE_Authority) {
-		//GLog->Log("is server toggle crouch");
 		UCharacterMovementComponent* Charmove = GetCharacterMovement();
 		if (isCrouched) {
-			Charmove->MaxWalkSpeed = CrouchSpeed;
-			//GLog->Log("is Crouch");
 			isCrouched = false;
 		}
 		else {
-			Charmove->MaxWalkSpeed = WalkSpeed;
-			//GLog->Log("is NOT Crouch");
 			isCrouched = true;
 		}
 		
@@ -259,6 +265,28 @@ void ATP_ThirdPersonCharacter::ServerReleasedButton_Implementation()
 }
 
 bool ATP_ThirdPersonCharacter::ServerReleasedButton_Validate()
+{
+	return true;
+}
+
+void ATP_ThirdPersonCharacter::ClientDied_Implementation()
+{
+	this->DisableInput(nullptr);
+	UCapsuleComponent* CapsuleComp = GetCapsuleComponent();
+	CapsuleComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	CapsuleComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	SetActorEnableCollision(true);
+
+	GetMesh()->SetAllBodiesSimulatePhysics(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->WakeAllRigidBodies();
+	GetMesh()->bBlendPhysics = true;
+
+}
+
+bool ATP_ThirdPersonCharacter::ClientDied_Validate()
 {
 	return true;
 }
