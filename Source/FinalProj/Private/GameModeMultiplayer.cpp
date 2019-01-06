@@ -45,8 +45,6 @@ void AGameModeMultiplayer::Tick(float DeltaTime)
 
 }
 
-
-
 void AGameModeMultiplayer::CloseGame()
 {
 	if (Role == ROLE_Authority)

@@ -22,6 +22,7 @@ void AGameStateMultiplayer::Tick(float DeltaTime)
 	{
 		if (MatchState == FName(TEXT("InProgress")))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("TOTAL PLAYERS: %f"), PlayerArray.Num());
 			PlayersLeft = PlayerArray.Num();
 			for (int i = 0; i < PlayerArray.Num(); i++)
 			{
@@ -35,6 +36,7 @@ void AGameStateMultiplayer::Tick(float DeltaTime)
 					PlayersLeft--;
 				}
 			}
+			UE_LOG(LogTemp, Warning, TEXT("PLAYERS LEFT: %f"), PlayersLeft);
 		}
 	}
 }

@@ -89,7 +89,7 @@ protected:
 	void CollectedPickup(APickUp* pickup);
 	void CollectedPickup_Implementation(APickUp* pickup);
 
-	UFUNCTION(Reliable, Server, WithValidation)
+	UFUNCTION(Reliable, Server, WithValidation, BlueprintCallable, Category = movement)
 	void ServerToggleCrouch();
 	void ServerToggleCrouch_Implementation();
 	bool ServerToggleCrouch_Validate();
@@ -97,6 +97,8 @@ protected:
 	void DoThisShit_Implementation(APickUp* pickup);
 
 	void ReleasedButton();
+
+	void ToggleCrouch();
 
 	UFUNCTION(Reliable, Server, WithValidation)
 	void ServerReleasedButton();
@@ -121,10 +123,6 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	//Movement
-	UFUNCTION(BlueprintCallable, Category=movement)
-	void ToggleCrouch();
-
 	UFUNCTION(BlueprintCallable, Category = movement)
 	void DealDamage();
 
@@ -144,5 +142,9 @@ private:
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
 	float CollectionSphereRadius;
 
+	UFUNCTION(Reliable, Server, WithValidation)
+	void DebugFunction();
+	void DebugFunction_Implementation();
+	bool DebugFunction_Validate();
 };
 

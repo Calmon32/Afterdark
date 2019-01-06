@@ -100,11 +100,11 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 		if (CurrentHealth <= 0.0f && GetLifeSpan() == 0.000f)
 		{
 			GLog->Log("PLAYER DIED");
-
+			
 			ClientDied();
 			Cast<APlayerStateMultiplayer>(GetPlayerState())->HasDied = true;
-			FTimerHandle UnusedHandle;
-			GetWorldTimerManager().SetTimer(UnusedHandle, Cast<APlayerControllerMultiplayer>(GetController()), &APlayerControllerMultiplayer::ChangeState_Spectator, 10.0f, false);
+			//FTimerHandle UnusedHandle;
+			//GetWorldTimerManager().SetTimer(UnusedHandle, Cast<APlayerControllerMultiplayer>(GetController()), &APlayerControllerMultiplayer::ChangeState_Spectator, 10.0f, false);
 			SetLifeSpan(10.0f);
 		}
 
@@ -129,6 +129,7 @@ void ATP_ThirdPersonCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, TotalHealth);
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, CurrentHealth);
 	DOREPLIFETIME(ATP_ThirdPersonCharacter, isCrouched);
+
 }
 
 void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -142,8 +143,11 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("MoveRight", this, &ATP_ThirdPersonCharacter::MoveRight);
 
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ATP_ThirdPersonCharacter::ToggleCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &ATP_ThirdPersonCharacter::ToggleCrouch);
 	PlayerInputComponent->BindAction("CollectPickups", IE_Pressed, this, &ATP_ThirdPersonCharacter::CollectPickups);
 	PlayerInputComponent->BindAction("CollectPickups", IE_Released, this, &ATP_ThirdPersonCharacter::ReleasedButton);
+
+	PlayerInputComponent->BindAction("Debug", IE_Released, this, &ATP_ThirdPersonCharacter::DebugFunction);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -206,17 +210,22 @@ void ATP_ThirdPersonCharacter::MoveRight(float Value)
 	}
 }
 
-void ATP_ThirdPersonCharacter::ToggleCrouch()
-{
-	ServerToggleCrouch();
-}
-
 void ATP_ThirdPersonCharacter::DealDamage()
 {
 	if (Role == ROLE_Authority)
 	{
 		CurrentHealth--;
 	}
+}
+
+void ATP_ThirdPersonCharacter::DebugFunction_Implementation()
+{
+	DealDamage();
+}
+
+bool ATP_ThirdPersonCharacter::DebugFunction_Validate()
+{
+	return true;
 }
 
 void ATP_ThirdPersonCharacter::CollectPickups() {
@@ -230,7 +239,6 @@ bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
 void ATP_ThirdPersonCharacter::ServerToggleCrouch_Implementation()
 {
 	if (Role == ROLE_Authority) {
-		UCharacterMovementComponent* Charmove = GetCharacterMovement();
 		if (isCrouched) {
 			isCrouched = false;
 		}
@@ -254,6 +262,19 @@ void ATP_ThirdPersonCharacter::DoThisShit_Implementation(APickUp * pickup)
 void ATP_ThirdPersonCharacter::ReleasedButton()
 {
 	ServerReleasedButton();
+}
+
+void ATP_ThirdPersonCharacter::ToggleCrouch()
+{
+	ServerToggleCrouch();
+	if (isCrouched) {
+		isCrouched = false;
+	}
+	else {
+		isCrouched = true;
+	}
+
+
 }
 
 void ATP_ThirdPersonCharacter::ServerReleasedButton_Implementation()
