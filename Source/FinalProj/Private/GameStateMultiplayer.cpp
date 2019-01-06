@@ -3,6 +3,8 @@
 #include "GameStateMultiplayer.h"
 #include "PlayerStateMultiplayer.h"
 #include "Net/UnrealNetwork.h"
+#include "PlayerStateMultiplayer.h"
+#include "../TP_ThirdPerson/TP_ThirdPersonCharacter.h"
 
 AGameStateMultiplayer::AGameStateMultiplayer() 
 {
@@ -12,6 +14,29 @@ AGameStateMultiplayer::AGameStateMultiplayer()
 void AGameStateMultiplayer::BeginPlay() {
 
 	KeysCaught = 0;
+}
+
+void AGameStateMultiplayer::Tick(float DeltaTime)
+{
+	if (Role == ROLE_Authority)
+	{
+		if (MatchState == FName(TEXT("InProgress")))
+		{
+			PlayersLeft = PlayerArray.Num();
+			for (int i = 0; i < PlayerArray.Num(); i++)
+			{
+				APlayerStateMultiplayer* ps = Cast<APlayerStateMultiplayer>(PlayerArray[i]);
+				if (ps->HasDied)
+				{
+					PlayersLeft--;
+				}
+				if (ps->IsEnemy || ps->HasEscaped)
+				{
+					PlayersLeft--;
+				}
+			}
+		}
+	}
 }
 
 

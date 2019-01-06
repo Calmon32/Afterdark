@@ -2,6 +2,7 @@
 
 #include "PlayerControllerMultiplayer.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerStateMultiplayer.h"
 
 APlayerControllerMultiplayer::APlayerControllerMultiplayer() 
 {
@@ -40,6 +41,24 @@ void APlayerControllerMultiplayer::DisableMove_Implementation()
 bool APlayerControllerMultiplayer::DisableMove_Validate()
 {
 	return true;
+}
+
+void APlayerControllerMultiplayer::ChangeState_Spectator()
+{
+	ChangeState(NAME_Spectating);
+	if (Role == ROLE_Authority && PlayerState != NULL)
+	{
+		Cast<APlayerStateMultiplayer>(PlayerState)->bIsSpectator = true;
+	}
+}
+
+void APlayerControllerMultiplayer::ChangeState_Player()
+{
+	ChangeState(NAME_Playing);
+	if (Role == ROLE_Authority && PlayerState != NULL)
+	{
+		Cast<APlayerStateMultiplayer>(PlayerState)->bIsSpectator = false;
+	}
 }
 
 void APlayerControllerMultiplayer::EnableMove_Implementation()
