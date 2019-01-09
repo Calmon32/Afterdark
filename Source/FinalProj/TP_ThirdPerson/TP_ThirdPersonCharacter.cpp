@@ -2,6 +2,7 @@
 
 #include "TP_ThirdPersonCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -81,20 +82,38 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 	if (Role == ROLE_Authority)
 	{
 		AGameStateMultiplayer* const gamestate = GetWorld() != NULL ? GetWorld()->GetGameState<AGameStateMultiplayer>() : NULL;
-		if (gamestate->GetKeysCaught() >= 3 && IsInteractButtonPressed && IsValid(DoorInteract))
+		if (IsInteractButtonPressed)
 		{
-			HoldInteractTime += DeltaTime;
-			UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
-			if (HoldInteractTime >= 8.0f)
+			if (gamestate->GetKeysCaught() >= 3 && IsValid(DoorInteract))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("OPENNED DOOR"));
-				DoorInteract->OpenDoor();
-				IsInteractButtonPressed = false;
+				HoldInteractTime += DeltaTime;
+				UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
+				if (HoldInteractTime >= 8.0f)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("OPENNED DOOR"));
+					DoorInteract->OpenDoor();
+					IsInteractButtonPressed = false;
+				}
+			}
+			else if (IsValid(KeyInteract))
+			{
+				HoldInteractTime += DeltaTime;
+				UE_LOG(LogTemp, Warning, TEXT("TIMER: %f"), HoldInteractTime);
+				if (HoldInteractTime >= 5.0f)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("GOT KEY"));
+					CollectedPickup(KeyInteract);
+					KeyInteract->PickedUpBy(this);
+					KeyInteract->SetActive(false);
+					KeyInteract = nullptr;
+					IsInteractButtonPressed = false;
+				}
 			}
 		}
 		else
 		{
 			HoldInteractTime = 0.0f;
+			KeyInteract = nullptr;
 		}
 
 		if (CurrentHealth <= 0.0f && GetLifeSpan() == 0.000f)
@@ -107,7 +126,6 @@ void ATP_ThirdPersonCharacter::Tick(float DeltaTime)
 			//GetWorldTimerManager().SetTimer(UnusedHandle, Cast<APlayerControllerMultiplayer>(GetController()), &APlayerControllerMultiplayer::ChangeState_Spectator, 10.0f, false);
 			SetLifeSpan(10.0f);
 		}
-
 	}
 
 	UCharacterMovementComponent* Charmove = GetCharacterMovement();
@@ -147,7 +165,7 @@ void ATP_ThirdPersonCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("CollectPickups", IE_Pressed, this, &ATP_ThirdPersonCharacter::CollectPickups);
 	PlayerInputComponent->BindAction("CollectPickups", IE_Released, this, &ATP_ThirdPersonCharacter::ReleasedButton);
 
-	PlayerInputComponent->BindAction("Debug", IE_Released, this, &ATP_ThirdPersonCharacter::DebugFunction);
+	PlayerInputComponent->BindAction("Exit", IE_Released, this, &ATP_ThirdPersonCharacter::QuitGame);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
@@ -183,7 +201,7 @@ void ATP_ThirdPersonCharacter::SetEscaped()
 
 void ATP_ThirdPersonCharacter::MoveForward(float Value)
 {
-	if ((Controller != NULL) && (Value != 0.0f))
+	if ((Controller != NULL) && (Value != 0.0f) && (!IsInteractButtonPressed))
 	{
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -197,7 +215,7 @@ void ATP_ThirdPersonCharacter::MoveForward(float Value)
 
 void ATP_ThirdPersonCharacter::MoveRight(float Value)
 {
-	if ( (Controller != NULL) && (Value != 0.0f) )
+	if ( (Controller != NULL) && (Value != 0.0f) && (!IsInteractButtonPressed))
 	{
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
@@ -218,18 +236,28 @@ void ATP_ThirdPersonCharacter::DealDamage()
 	}
 }
 
-void ATP_ThirdPersonCharacter::DebugFunction_Implementation()
+void ATP_ThirdPersonCharacter::QuitGame()
 {
-	DealDamage();
+	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
 }
 
-bool ATP_ThirdPersonCharacter::DebugFunction_Validate()
-{
-	return true;
-}
 
 void ATP_ThirdPersonCharacter::CollectPickups() {
 	ServerCollectPickups();
+	TArray<AActor*> CollectedActors;
+	CollectionSphere->GetOverlappingActors(CollectedActors);
+
+	for (int i = 0; i < CollectedActors.Num(); i++)
+	{
+		APickUp* const TestPickup = Cast<APickUp>(CollectedActors[i]);
+		if (TestPickup != NULL && !TestPickup->IsPendingKill() && TestPickup->IsActive())
+		{
+			if (AKeyPickup* const TestBattery = Cast<AKeyPickup>(TestPickup))
+			{
+				KeyInteract = TestBattery;
+			}
+		}
+	}
 }
 
 bool ATP_ThirdPersonCharacter::ServerCollectPickups_Validate() {
@@ -328,26 +356,8 @@ void ATP_ThirdPersonCharacter::ServerCollectPickups_Implementation()
 			{
 				if (AKeyPickup* const TestBattery = Cast<AKeyPickup>(TestPickup))
 				{
-
-					//ADoor* door->AddProgress();
-
-					/*UE_LOG(LogTemp, Warning, TEXT("number of quests: %d"), QuestArray.Num());
-					for (int j = 0; j < QuestArray.Num(); j++)
-					{
-						AQuestBase* quest = QuestArray[j];
-						UE_LOG(LogTemp, Warning, TEXT("description of quests: %d"), quest->TargetID);
-						if (quest->TargetID == TestBattery->PickupID)
-						{
-							quest->AddProgress();
-							GLog->Log("add to progress asdhjasgdkjahsdfasd");
-						}
-					}
-					LevelingSystem->AddExperience(100.0f);
-					*/
+					KeyInteract = TestBattery;
 				}
-				CollectedPickup(TestPickup);
-				TestPickup->PickedUpBy(this);
-				TestPickup->SetActive(false);
 			}
 		}
 	}

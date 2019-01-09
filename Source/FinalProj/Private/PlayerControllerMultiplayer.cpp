@@ -71,3 +71,8 @@ bool APlayerControllerMultiplayer::EnableMove_Validate()
 {
 	return true;
 }
+
+void APlayerControllerMultiplayer::QuitGame()
+{
+	UGameplayStatics::OpenLevel(GetWorld(), "MainMenu");
+}

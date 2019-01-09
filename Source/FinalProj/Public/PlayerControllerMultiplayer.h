@@ -42,4 +42,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = State)
 	void ChangeState_Player();
 	
+	void QuitGame();
+
 };

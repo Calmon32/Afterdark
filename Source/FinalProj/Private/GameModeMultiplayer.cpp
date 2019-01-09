@@ -8,6 +8,9 @@
 #include "PlayerControllerMultiplayer.h"
 #include "GameStateMultiplayer.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
+#include "TimerManager.h"
+#include "KeyPickup.h"
+#include "EngineUtils.h"
 
 
 AGameModeMultiplayer::AGameModeMultiplayer()
@@ -16,7 +19,10 @@ AGameModeMultiplayer::AGameModeMultiplayer()
 
 	loaded = false;
 
+	IsOver = false;
+
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnPoints);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AKeyPickup::StaticClass(), KeyList);
 }
 
 void AGameModeMultiplayer::BeginPlay() {
@@ -26,8 +32,8 @@ void AGameModeMultiplayer::BeginPlay() {
 	UE_LOG(LogTemp, Warning, TEXT("OPTIONS: %s"), *OptionsString);
 	expectedPlayerCount = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "PlayerCount")));
 	UE_LOG(LogTemp, Warning, TEXT("PLAYERS: %d"), expectedPlayerCount);
-	isServer = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "IsServer")));
-	UE_LOG(LogTemp, Warning, TEXT("IsServer: %d"), isServer);
+	thisIsServer = FCString::Atoi(*(UGameplayStatics::ParseOption(OptionsString, "IsServer")));
+	UE_LOG(LogTemp, Warning, TEXT("IsServer: %d"), thisIsServer);
 	enemyPlayer = UGameplayStatics::ParseOption(OptionsString, "EnemyPlayer");
 	UE_LOG(LogTemp, Warning, TEXT("EnemyPlayer: %s"), *enemyPlayer);
 
@@ -36,21 +42,69 @@ void AGameModeMultiplayer::BeginPlay() {
 	AGameStateMultiplayer* gamesta = Cast<AGameStateMultiplayer>(GameState);
 	gamesta->ExpectedPlayerCount = expectedPlayerCount;
 
-	loaded = true;
-
+	if (GetWorld()->GetMapName().Contains(FString("MAP")))
+	{
+		RemoveExtraKeys();
+		loaded = true;
+	}
 }
 
 void AGameModeMultiplayer::Tick(float DeltaTime)
 {
-
+	if (GetMatchState() == MatchState::InProgress && loaded && !IsOver)
+	{
+		totalPlayers = 0;
+		PlayersOut = 0;
+		PlayersDead = 0;
+		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			APlayerControllerMultiplayer* PlayerController = Cast<APlayerControllerMultiplayer>(*Iterator);
+			if (PlayerController)
+			{
+				totalPlayers++;
+				APlayerState* ps = PlayerController->PlayerState;
+				APlayerStateMultiplayer* psm = Cast<APlayerStateMultiplayer>(ps);
+				if (psm->IsEnemy)
+				{
+					totalPlayers--;
+				}
+				else if (psm->HasEscaped)
+				{
+					PlayersOut++;
+				}
+				else if (psm->HasDied)
+				{
+					PlayersDead++;
+				}
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("Players: %d == %d"), totalPlayers, PlayersOut + PlayersDead);
+		if (PlayersOut + PlayersDead == totalPlayers)
+		{
+			IsOver = true;
+			AGameStateMultiplayer* gs = Cast<AGameStateMultiplayer>(GameState);
+			gs->IsMatchOver = true;
+			gs->NotSurvivors = PlayersDead;
+			UE_LOG(LogTemp, Warning, TEXT("MATCH IS OVER!!!!!!!!"));
+			FTimerHandle UnusedHandle;
+			GetWorldTimerManager().SetTimer(UnusedHandle, this, &AGameModeMultiplayer::CloseGame, 10.0f, false);
+		}
+	}
 }
 
 void AGameModeMultiplayer::CloseGame()
 {
 	if (Role == ROLE_Authority)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MATCH IS OVER!!!!!!!!"));
-		//FGenericPlatformMisc::RequestExit(true);
+		for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+		{
+			APlayerControllerMultiplayer* PlayerController = Cast<APlayerControllerMultiplayer>(*Iterator);
+			if (PlayerController)
+			{
+				PlayerController->QuitGame();
+			}
+		}
+		FGenericPlatformMisc::RequestExit(true);
 	}
 }
 
@@ -126,5 +180,17 @@ UClass* AGameModeMultiplayer::GetDefaultPawnClassForController_Implementation(AC
 	else
 	{
 		return DefaultPawnClass;
+	}
+}
+
+void AGameModeMultiplayer::RemoveExtraKeys()
+{
+	int num = KeyList.Num() - 4;
+	for (int i = 0; i < num; i++)
+	{
+		int index = FMath::RoundToInt(FMath::RandRange(0, KeyList.Num() - 1));
+		UE_LOG(LogTemp, Warning, TEXT("REMOVEDAT: %d"), index);
+		KeyList[index]->Destroy();
+		KeyList.RemoveAt(index);
 	}
 }

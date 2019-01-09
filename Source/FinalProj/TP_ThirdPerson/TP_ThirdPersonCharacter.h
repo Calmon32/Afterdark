@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "PickUp.h"
 #include "Door.h"
+#include "PickUp.h"
 #include "TP_ThirdPersonCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -32,8 +32,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 	ADoor* DoorInteract;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+	APickUp* KeyInteract;
 
 
 
@@ -132,19 +135,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float CrouchSpeed;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay")
+	bool isCrouched;
+	
+	void QuitGame();
+
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	//bool CrouchButtonDown;
 private:
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
-	bool isCrouched;
-
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Gameplay", Meta = (AllowPrivateAccess = "true"))
 	float CollectionSphereRadius;
-
-	UFUNCTION(Reliable, Server, WithValidation)
-	void DebugFunction();
-	void DebugFunction_Implementation();
-	bool DebugFunction_Validate();
 };
 

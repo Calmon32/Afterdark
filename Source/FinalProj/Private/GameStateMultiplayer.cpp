@@ -9,11 +9,13 @@
 AGameStateMultiplayer::AGameStateMultiplayer() 
 {
 	PrimaryActorTick.bCanEverTick = true;
+	IsMatchOver = false;
 }
 
 void AGameStateMultiplayer::BeginPlay() {
 
 	KeysCaught = 0;
+	NotSurvivors = 0;
 }
 
 void AGameStateMultiplayer::Tick(float DeltaTime)
@@ -22,21 +24,7 @@ void AGameStateMultiplayer::Tick(float DeltaTime)
 	{
 		if (MatchState == FName(TEXT("InProgress")))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("TOTAL PLAYERS: %f"), PlayerArray.Num());
-			PlayersLeft = PlayerArray.Num();
-			for (int i = 0; i < PlayerArray.Num(); i++)
-			{
-				APlayerStateMultiplayer* ps = Cast<APlayerStateMultiplayer>(PlayerArray[i]);
-				if (ps->HasDied)
-				{
-					PlayersLeft--;
-				}
-				if (ps->IsEnemy || ps->HasEscaped)
-				{
-					PlayersLeft--;
-				}
-			}
-			UE_LOG(LogTemp, Warning, TEXT("PLAYERS LEFT: %f"), PlayersLeft);
+			
 		}
 	}
 }
@@ -47,6 +35,7 @@ void AGameStateMultiplayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AGameStateMultiplayer, KeysCaught);
+	DOREPLIFETIME(AGameStateMultiplayer, IsMatchOver);
 }
 
 void AGameStateMultiplayer::KeyCaught()

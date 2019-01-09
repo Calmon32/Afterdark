@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameMode.h"
 #include "PlayerControllerMultiplayer.h"
-
+#include "KeyPickup.h"
 #include "GameFramework/Character.h"
 #include "GameModeMultiplayer.generated.h"
 
@@ -30,7 +30,7 @@ public:
 	int playercount;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Server)
-	int isServer;
+	int thisIsServer;
 
 	TArray<class APlayerControllerMultiplayer*> PlayerControllerList;
 
@@ -38,6 +38,15 @@ public:
 	TSubclassOf<ACharacter> EnemyPawn;
 
 	void CloseGame();
+
+	UPROPERTY(BlueprintReadOnly, Category = "GamePlay")
+	int totalPlayers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "GamePlay")
+	int PlayersOut;
+
+	UPROPERTY(BlueprintReadOnly, Category = "GamePlay")
+	int PlayersDead;
 
 private:
 
@@ -57,7 +66,13 @@ private:
 
 	TArray<AActor*> SpawnPoints;
 
+	TArray<AActor*> KeyList;
+
+	void RemoveExtraKeys();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy")
 	bool DebugMode;
+
+	bool IsOver;
 	
 };

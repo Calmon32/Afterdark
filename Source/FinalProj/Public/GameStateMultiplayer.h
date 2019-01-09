@@ -37,6 +37,12 @@ public:
 
 	int ExpectedPlayerCount;
 
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
+	bool IsMatchOver;
+
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
+	int NotSurvivors;
+
 private:
 
 	UPROPERTY(Replicated)
